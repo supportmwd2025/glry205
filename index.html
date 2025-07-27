@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Галерея изображений</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #222;
+    color: #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #gallery {
+    margin-top: 20px;
+    max-width: 90vw;
+    max-height: 80vh;
+    border: 2px solid #555;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    touch-action: pan-y; /* чтобы свайпы горизонтальные ловить */
+  }
+  #gallery img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .controls {
+    margin-top: 15px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  button, select {
+    padding: 8px 14px;
+    font-size: 1rem;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    background: #444;
+    color: #eee;
+    transition: background 0.3s;
+  }
+  button:hover, select:hover {
+    background: #666;
+  }
+</style>
+</head>
+<body>
+
+<h1>Галерея изображений</h1>
+
+<input type="file" id="fileInput" accept="image/*" multiple />
+
+<div id="gallery">
+  <p>Загрузите изображения</p>
+</div>
+
+<div class="controls">
+  <button id="prevBtn" disabled>Назад</button>
+  <button id="nextBtn" disabled>Вперед</button>
+  <button id="fullscreenBtn" disabled>Полный экран</button>
+  
+  <label for="intervalSelect">Интервал показа:</label>
+  <select id="intervalSelect" disabled>
+    <option value="2000">2 с</option>
+    <option value="3000" selected>3 с</option>
+    <option value="5000">5 с</option>
+    <option value="7000">7 с</option>
+  </select>
+  
+  <button id="randomSlideshowBtn" disabled>Запустить слайдшоу (рандом)</button>
+  <button id="stopSlideshowBtn" disabled>Остановить слайдшоу</button>
+</div>
+
+<script>
+  const fileInput = document.getElementById('fileInput');
+  const gallery = document.getElementById('gallery');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const intervalSelect = document.getElementById('intervalSelect');
+  const randomSlideshowBtn = document.getElementById('randomSlideshowBtn');
+  const stopSlideshowBtn = document.getElementById('stopSlideshowBtn');
+
+  let images = [];
+  let currentIndex = 0;
+  let slideshowTimer = null;
+
+  function updateGallery() {
+    gallery.innerHTML = '';
+    if (images.length === 0) {
+      gallery.innerHTML = '<p>Загрузите изображения</p>';
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+      fullscreenBtn.disabled = true;
+      intervalSelect.disabled = true;
+      randomSlideshowBtn.disabled = true;
+      stopSlideshowBtn.disabled = true;
+      return;
+    }
+    
+    const img = document.createElement('img');
+    img.src = images[currentIndex];
+    img.alt = Изображение ${currentIndex + 1} из ${images.length};
+    gallery.appendChild(img);
+    
+    prevBtn.disabled = (currentIndex === 0);
+    nextBtn.disabled = (currentIndex === images.length - 1);
+    fullscreenBtn.disabled = false;
+    intervalSelect.disabled = false;
+    randomSlideshowBtn.disabled = false;
+    stopSlideshowBtn.disabled = slideshowTimer === null;
+  }
+
+  fileInput.addEventListener('change', () => {
+    slideshowStop();
+    images.forEach(url => URL.revokeObjectURL(url)); // очищаем старые URL
+    images = [];
+    currentIndex = 0;
+
+    const files = Array.from(fileInput.files);
+    if (files.length === 0) {
+      updateGallery();
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        images.push(url);
+      }
+    });
+    updateGallery();
+  });
+
+  prevBtn.addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      updateGallery();
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (currentIndex < images.length - 1) {
+currentIndex++;
+      updateGallery();
+    }
+  });
+
+  fullscreenBtn.addEventListener('click', () => {
+    if (gallery.requestFullscreen) {
+      gallery.requestFullscreen();
+    } else if (gallery.webkitRequestFullscreen) { /* Safari */
+      gallery.webkitRequestFullscreen();
+    } else if (gallery.msRequestFullscreen) { /* IE11 */
+      gallery.msRequestFullscreen();
+    }
+  });
+
+  function slideshowStart() {
+    if (images.length === 0) return;
+    randomSlideshowBtn.disabled = true;
+    stopSlideshowBtn.disabled = false;
+    intervalSelect.disabled = true;
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+    fullscreenBtn.disabled = true;
+
+    slideshowTimer = setInterval(() => {
+      // Выбираем случайный индекс, отличный от текущего
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * images.length);
+      } while (nextIndex === currentIndex && images.length > 1);
+
+      currentIndex = nextIndex;
+      updateGallery();
+    }, parseInt(intervalSelect.value));
+  }
+
+  function slideshowStop() {
+    if (slideshowTimer) {
+      clearInterval(slideshowTimer);
+      slideshowTimer = null;
+      updateGallery();
+    }
+  }
+
+  randomSlideshowBtn.addEventListener('click', slideshowStart);
+  stopSlideshowBtn.addEventListener('click', slideshowStop);
+
+  // При выходе из fullscreen включаем кнопки обратно
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      updateGallery();
+    }
+  });
+
+  // Обработка свайпов для листания на мобильных устройствах
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  gallery.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+  }, false);
+
+  gallery.addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleGesture();
+  }, false);
+
+  function handleGesture() {
+    const swipeThreshold = 50; // минимальное расстояние свайпа в пикселях
+    if (slideshowTimer) return; // не листаем, если слайдшоу идёт
+
+    if (touchEndX < touchStartX - swipeThreshold) {
+      // свайп влево — следующая картинка
+      if (currentIndex < images.length - 1) {
+        currentIndex++;
+        updateGallery();
+      }
+    }
+    if (touchEndX > touchStartX + swipeThreshold) {
+      // свайп вправо — предыдущая картинка
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateGallery();
+      }
+    }
+  }
+</script>
+
+</body>
+</html>

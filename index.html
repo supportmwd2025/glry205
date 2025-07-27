@@ -1,243 +1,574 @@
+Денис Приходько, [27.07.2025 18:30]
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Галерея изображений</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #222;
-    color: #eee;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  #gallery {
-    margin-top: 20px;
-    max-width: 90vw;
-    max-height: 80vh;
-    border: 2px solid #555;
-    background: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    touch-action: pan-y; /* чтобы свайпы горизонтальные ловить */
-  }
-  #gallery img {
-    max-width: 100%;
-    max-height: 80vh;
-    object-fit: contain;
-    user-select: none;
-    -webkit-user-drag: none;
-  }
-  .controls {
-    margin-top: 15px;
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  button, select {
-    padding: 8px 14px;
-    font-size: 1rem;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-    background: #444;
-    color: #eee;
-    transition: background 0.3s;
-  }
-  button:hover, select:hover {
-    background: #666;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная галерея изображений</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .gallery-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .upload-area {
+            border: 3px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .upload-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            color: #fdbb2d;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(to right, #ff8c00, #ff0080);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn i {
+            font-size: 1.2rem;
+        }
+
+        .thumbnail-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .thumbnail {
+            border-radius: 8px;
+            overflow: hidden;
+            height: 100px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .thumbnail:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumbnail.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 3px solid #ff0080;
+            border-radius: 8px;
+        }
+
+        .preview-section {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+
+Денис Приходько, [27.07.2025 18:30]
+display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .preview-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .image-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .main-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+        }
+
+        .controls {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .interval-select {
+            padding: 10px 15px;
+            border-radius: 50px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .interval-select option {
+            background: #1a2a6c;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            margin-top: 15px;
+            padding: 0 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 5px;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff0080;
+            cursor: pointer;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Полноэкранный режим */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        .fullscreen img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+        }
+
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.5);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Сообщение о пустой галерее */
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            opacity: 0.7;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>Интерактивная Галерея</h1>
+            <p class="subtitle">Загружайте, просматривайте и наслаждайтесь вашими изображениями</p>
+        </header>
 
-<h1>Галерея изображений</h1>
+        <div class="main-content">
+            <div class="gallery-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Перетащите сюда изображения или</h3>
 
-<input type="file" id="fileInput" accept="image/*" multiple />
+Денис Приходько, [27.07.2025 18:30]
+<input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
+                    <button class="btn" id="uploadBtn"><span>Выбрать файлы</span></button>
+                </div>
 
-<div id="gallery">
-  <p>Загрузите изображения</p>
-</div>
+                <h3>Миниатюры</h3>
+                <div class="thumbnail-container" id="thumbnailContainer">
+                    <div class="empty-message">Загрузите изображения для просмотра</div>
+                </div>
+            </div>
 
-<div class="controls">
-  <button id="prevBtn" disabled>Назад</button>
-  <button id="nextBtn" disabled>Вперед</button>
-  <button id="fullscreenBtn" disabled>Полный экран</button>
-  
-  <label for="intervalSelect">Интервал показа:</label>
-  <select id="intervalSelect" disabled>
-    <option value="2000">2 с</option>
-    <option value="3000" selected>3 с</option>
-    <option value="5000">5 с</option>
-    <option value="7000">7 с</option>
-  </select>
-  
-  <button id="randomSlideshowBtn" disabled>Запустить слайдшоу (рандом)</button>
-  <button id="stopSlideshowBtn" disabled>Остановить слайдшоу</button>
-</div>
+            <div class="preview-section">
+                <div class="preview-header">
+                    Просмотр изображения
+                </div>
+                
+                <div class="image-container">
+                    <img id="mainImage" class="main-image" src="data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3e%3crect width='400' height='300' fill='%231a1a2e'/%3e%3ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='18px' fill='%23ffffff'%3eВыберите изображение%3c/text%3e%3c/svg%3e" alt="Превью">
+                </div>
+                
+                <div class="slider-container">
+                    <input type="range" min="1" max="10" value="5" class="slider" id="zoomSlider">
+                    <div class="slider-labels">
+                        <span>Уменьшить</span>
+                        <span>Масштаб</span>
+                        <span>Увеличить</span>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn" id="fullscreenBtn">
+                        <span>Полный экран</span>
+                    </button>
+                    
+                    <select class="interval-select" id="intervalSelect">
+                        <option value="2">2 секунды</option>
+                        <option value="3">3 секунды</option>
+                        <option value="5" selected>5 секунд</option>
+                        <option value="7">7 секунд</option>
+                    </select>
+                    
+                    <button class="btn" id="slideshowBtn">
+                        <span>Слайд-шоу</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 Интерактивная Галерея | Все изображения обрабатываются локально на вашем устройстве</p>
+        </footer>
+    </div>
 
-<script>
-  const fileInput = document.getElementById('fileInput');
-  const gallery = document.getElementById('gallery');
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
-  const fullscreenBtn = document.getElementById('fullscreenBtn');
-  const intervalSelect = document.getElementById('intervalSelect');
-  const randomSlideshowBtn = document.getElementById('randomSlideshowBtn');
-  const stopSlideshowBtn = document.getElementById('stopSlideshowBtn');
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Элементы DOM
+            const fileInput = document.getElementById('fileInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadArea = document.getElementById('uploadArea');
+            const thumbnailContainer = document.getElementById('thumbnailContainer');
+            const mainImage = document.getElementById('mainImage');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const slideshowBtn = document.getElementById('slideshowBtn');
+            const intervalSelect = document.getElementById('intervalSelect');
+            const zoomSlider = document.getElementById('zoomSlider');
+            
+            // Переменные состояния
+            let images = [];
+            let currentImageIndex = -1;
+            let slideshowInterval = null;
+            
+            // Инициализация
+            initGallery();
+            
+            function initGallery() {
+                // Обработчики событий
+                uploadBtn.addEventListener('click', () => fileInput.click());
+                uploadArea.addEventListener('dragover', handleDragOver);
+                uploadArea.addEventListener('drop', handleDrop);
+                fileInput.addEventListener('change', handleFileSelect);
+                fullscreenBtn.addEventListener('click', toggleFullscreen);
+                slideshowBtn.addEventListener('click', toggleSlideshow);
+                zoomSlider.addEventListener('input', handleZoom);
+            }
 
-  let images = [];
-  let currentIndex = 0;
-  let slideshowTimer = null;
+Денис Приходько, [27.07.2025 18:30]
+// Обработка перетаскивания файлов
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.style.background = 'rgba(255, 255, 255, 0.15)';
+            }
+            
+            function handleDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.style.background = '';
+                
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFileSelect();
+                }
+            }
+            
+            // Обработка выбора файлов
+            function handleFileSelect() {
+                const files = Array.from(fileInput.files);
+                if (files.length === 0) return;
+                
+                // Очищаем сообщение "галерея пуста"
+                if (thumbnailContainer.querySelector('.empty-message')) {
+                    thumbnailContainer.innerHTML = '';
+                }
+                
+                files.forEach(file => {
+                    if (!file.type.match('image.*')) return;
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = (e) => {
+                        images.push(e.target.result);
+                        createThumbnail(e.target.result);
+                        
+                        // Если это первое изображение, показываем его
+                        if (currentImageIndex === -1) {
+                            currentImageIndex = 0;
+                            showImage(currentImageIndex);
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            }
+            
+            // Создание миниатюры
+            function createThumbnail(src) {
+                const index = images.length - 1;
+                
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'thumbnail';
+                thumbnail.dataset.index = index;
+                
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = Изображение ${index + 1};
+                
+                thumbnail.appendChild(img);
+                thumbnail.addEventListener('click', () => {
+                    showImage(index);
+                    // Останавливаем слайд-шоу при выборе изображения
+                    stopSlideshow();
+                });
+                
+                thumbnailContainer.appendChild(thumbnail);
+            }
+            
+            // Показ выбранного изображения
+            function showImage(index) {
+                currentImageIndex = index;
+                mainImage.src = images[index];
+                mainImage.classList.add('fade-in');
+                
+                // Удаляем класс анимации после завершения
+                setTimeout(() => {
+                    mainImage.classList.remove('fade-in');
+                }, 500);
+                
+                // Обновляем активную миниатюру
+                document.querySelectorAll('.thumbnail').forEach((thumb, i) => {
+                    if (i === index) {
+                        thumb.classList.add('active');
+                    } else {
+                        thumb.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Переключение полноэкранного режима
+            function toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    // Вход в полноэкранный режим
+                    const fullscreenContainer = document.createElement('div');
+                    fullscreenContainer.className = 'fullscreen';
+                    
+                    const fullscreenImg = document.createElement('img');
+                    fullscreenImg.src = mainImage.src;
+                    fullscreenImg.
 
-  function updateGallery() {
-    gallery.innerHTML = '';
-    if (images.length === 0) {
-      gallery.innerHTML = '<p>Загрузите изображения</p>';
-      prevBtn.disabled = true;
-      nextBtn.disabled = true;
-      fullscreenBtn.disabled = true;
-      intervalSelect.disabled = true;
-      randomSlideshowBtn.disabled = true;
-      stopSlideshowBtn.disabled = true;
-      return;
-    }
-    
-    const img = document.createElement('img');
-    img.src = images[currentIndex];
-    img.alt = Изображение ${currentIndex + 1} из ${images.length};
-    gallery.appendChild(img);
-    
-    prevBtn.disabled = (currentIndex === 0);
-    nextBtn.disabled = (currentIndex === images.length - 1);
-    fullscreenBtn.disabled = false;
-    intervalSelect.disabled = false;
-    randomSlideshowBtn.disabled = false;
-    stopSlideshowBtn.disabled = slideshowTimer === null;
-  }
-
-  fileInput.addEventListener('change', () => {
-    slideshowStop();
-    images.forEach(url => URL.revokeObjectURL(url)); // очищаем старые URL
-    images = [];
-    currentIndex = 0;
-
-    const files = Array.from(fileInput.files);
-    if (files.length === 0) {
-      updateGallery();
-      return;
-    }
-
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const url = URL.createObjectURL(file);
-        images.push(url);
-      }
-    });
-    updateGallery();
-  });
-
-  prevBtn.addEventListener('click', () => {
-    if (currentIndex > 0) {
-      currentIndex--;
-      updateGallery();
-    }
-  });
-
-  nextBtn.addEventListener('click', () => {
-    if (currentIndex < images.length - 1) {
-currentIndex++;
-      updateGallery();
-    }
-  });
-
-  fullscreenBtn.addEventListener('click', () => {
-    if (gallery.requestFullscreen) {
-      gallery.requestFullscreen();
-    } else if (gallery.webkitRequestFullscreen) { /* Safari */
-      gallery.webkitRequestFullscreen();
-    } else if (gallery.msRequestFullscreen) { /* IE11 */
-      gallery.msRequestFullscreen();
-    }
-  });
-
-  function slideshowStart() {
-    if (images.length === 0) return;
-    randomSlideshowBtn.disabled = true;
-    stopSlideshowBtn.disabled = false;
-    intervalSelect.disabled = true;
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
-    fullscreenBtn.disabled = true;
-
-    slideshowTimer = setInterval(() => {
-      // Выбираем случайный индекс, отличный от текущего
-      let nextIndex;
-      do {
-        nextIndex = Math.floor(Math.random() * images.length);
-      } while (nextIndex === currentIndex && images.length > 1);
-
-      currentIndex = nextIndex;
-      updateGallery();
-    }, parseInt(intervalSelect.value));
-  }
-
-  function slideshowStop() {
-    if (slideshowTimer) {
-      clearInterval(slideshowTimer);
-      slideshowTimer = null;
-      updateGallery();
-    }
-  }
-
-  randomSlideshowBtn.addEventListener('click', slideshowStart);
-  stopSlideshowBtn.addEventListener('click', slideshowStop);
-
-  // При выходе из fullscreen включаем кнопки обратно
-  document.addEventListener('fullscreenchange', () => {
-    if (!document.fullscreenElement) {
-      updateGallery();
-    }
-  });
-
-  // Обработка свайпов для листания на мобильных устройствах
-  let touchStartX = 0;
-  let touchEndX = 0;
-
-  gallery.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-  }, false);
-
-  gallery.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleGesture();
-  }, false);
-
-  function handleGesture() {
-    const swipeThreshold = 50; // минимальное расстояние свайпа в пикселях
-    if (slideshowTimer) return; // не листаем, если слайдшоу идёт
-
-    if (touchEndX < touchStartX - swipeThreshold) {
-      // свайп влево — следующая картинка
-      if (currentIndex < images.length - 1) {
-        currentIndex++;
-        updateGallery();
-      }
-    }
-    if (touchEndX > touchStartX + swipeThreshold) {
-      // свайп вправо — предыдущая картинка
-      if (currentIndex > 0) {
-        currentIndex--;
-        updateGallery();
-      }
-    }
-  }
-</script>
-
+Денис Приходько, [27.07.2025 18:30]
+alt = 'Изображение в полноэкранном режиме';
+                    
+                    const closeBtn = document.createElement('div');
+                    closeBtn.className = 'close-fullscreen';
+                    closeBtn.innerHTML = '✕';
+                    closeBtn.addEventListener('click', () => {
+                        document.body.removeChild(fullscreenContainer);
+                    });
+                    
+                    fullscreenContainer.appendChild(fullscreenImg);
+                    fullscreenContainer.appendChild(closeBtn);
+                    document.body.appendChild(fullscreenContainer);
+                    
+                    fullscreenContainer.addEventListener('click', (e) => {
+                        if (e.target === fullscreenContainer) {
+                            document.body.removeChild(fullscreenContainer);
+                        }
+                    });
+                }
+            }
+            
+            // Управление слайд-шоу
+            function toggleSlideshow() {
+                if (slideshowInterval) {
+                    stopSlideshow();
+                    slideshowBtn.innerHTML = '<span>Слайд-шоу</span>';
+                } else {
+                    startSlideshow();
+                    slideshowBtn.innerHTML = '<span>Остановить</span>';
+                }
+            }
+            
+            function startSlideshow() {
+                if (images.length === 0) return;
+                
+                const interval = parseInt(intervalSelect.value) * 1000;
+                slideshowInterval = setInterval(() => {
+                    currentImageIndex = Math.floor(Math.random() * images.length);
+                    showImage(currentImageIndex);
+                }, interval);
+            }
+            
+            function stopSlideshow() {
+                if (slideshowInterval) {
+                    clearInterval(slideshowInterval);
+                    slideshowInterval = null;
+                }
+            }
+            
+            // Обработка масштабирования
+            function handleZoom() {
+                const scale = 0.5 + (zoomSlider.value / 10);
+                mainImage.style.transform = scale(${scale});
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Галерея изображений</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .gallery-container {
+            max-width: 1200px;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .gallery img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+        .gallery img:hover {
+            transform: scale(1.05);
+        }
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .fullscreen img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        .fullscreen-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button, select, input {
+            padding: 8px 12px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover, select:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="gallery-container">
+        <div class="controls">
+            <input type="file" id="fileInput" accept="image/*" multiple>
+            <button onclick="toggleRandomSlideshow()">Случайный показ</button>
+            <select id="intervalSelect" onchange="updateInterval()">
+                <option value="2">2 секунды</option>
+                <option value="3">3 секунды</option>
+                <option value="5">5 секунд</option>
+                <option value="7">7 секунд</option>
+            </select>
+        </div>
+        <div class="gallery" id="gallery"></div>
+    </div>
+
+    <div class="fullscreen" id="fullscreen" style="display: none;">
+        <img id="fullscreenImage" src="">
+        <div class="fullscreen-controls">
+            <button onclick="prevImage()">Назад</button>
+            <button onclick="nextImage()">Вперед</button>
+            <button onclick="exitFullscreen()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        let images = [];
+        let currentIndex = 0;
+        let slideshowInterval = null;
+        let isSlideshowRunning = false;
+
+        // Загрузка изображений
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            const files = event.target.files;
+            images = [];
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+
+            for (let file of files) {
+                const url = URL.createObjectURL(file);
+                images.push(url);
+                const img = document.createElement('img');
+                img.src = url;
+                img.onclick = () => showFullscreen(url, images.indexOf(url));
+                gallery.appendChild(img);
+            }
+        });
+
+        // Полноэкранный режим
+        function showFullscreen(url, index) {
+            currentIndex = index;
+const fullscreen = document.getElementById('fullscreen');
+            const fullscreenImage = document.getElementById('fullscreenImage');
+            fullscreenImage.src = url;
+            fullscreen.style.display = 'flex';
+        }
+
+        // Закрытие полноэкранного режима
+        function exitFullscreen() {
+            document.getElementById('fullscreen').style.display = 'none';
+            stopSlideshow();
+        }
+
+        // Переключение на предыдущее изображение
+        function prevImage() {
+            if (images.length === 0) return;
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            document.getElementById('fullscreenImage').src = images[currentIndex];
+        }
+
+        // Переключение на следующее изображение
+        function nextImage() {
+            if (images.length === 0) return;
+            currentIndex = (currentIndex + 1) % images.length;
+            document.getElementById('fullscreenImage').src = images[currentIndex];
+        }
+
+        // Случайное изображение
+        function showRandomImage() {
+            if (images.length === 0) return;
+            currentIndex = Math.floor(Math.random() * images.length);
+            document.getElementById('fullscreenImage').src = images[currentIndex];
+            document.getElementById('fullscreen').style.display = 'flex';
+        }
+
+        // Запуск/остановка слайдшоу
+        function toggleRandomSlideshow() {
+            if (isSlideshowRunning) {
+                stopSlideshow();
+            } else {
+                startSlideshow();
+            }
+        }
+
+        // Запуск слайдшоу
+        function startSlideshow() {
+            if (images.length === 0) return;
+            isSlideshowRunning = true;
+            document.getElementById('fileInput').disabled = true;
+            showRandomImage();
+            const interval = parseInt(document.getElementById('intervalSelect').value) * 1000;
+            slideshowInterval = setInterval(showRandomImage, interval);
+        }
+
+        // Остановка слайдшоу
+        function stopSlideshow() {
+            isSlideshowRunning = false;
+            document.getElementById('fileInput').disabled = false;
+            clearInterval(slideshowInterval);
+        }
+
+        // Обновление интервала слайдшоу
+        function updateInterval() {
+            if (isSlideshowRunning) {
+                stopSlideshow();
+                startSlideshow();
+            }
+        }
+
+        // Обработка клавиш для навигации
+        document.addEventListener('keydown', (event) => {
+            if (document.getElementById('fullscreen').style.display === 'flex') {
+                if (event.key === 'ArrowLeft') prevImage();
+                if (event.key === 'ArrowRight') nextImage();
+                if (event.key === 'Escape') exitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,10 +1,11 @@
-Денис Приходько, [27.07.2025 18:30]
+Денис Приходько, [27.07.2025 18:38]
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Интерактивная галерея изображений</title>
+    <title>Галерея изображений</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -160,12 +161,12 @@
 
         .preview-section {
             position: relative;
-            background: rgba(0, 0, 0, 0.2);
+
+Денис Приходько, [27.07.2025 18:38]
+background: rgba(0, 0, 0, 0.2);
             border-radius: 15px;
             overflow: hidden;
-
-Денис Приходько, [27.07.2025 18:30]
-display: flex;
+            display: flex;
             flex-direction: column;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
@@ -184,6 +185,7 @@ display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            min-height: 300px;
         }
 
         .main-image {
@@ -191,6 +193,7 @@ display: flex;
             max-height: 400px;
             border-radius: 10px;
             box-shadow: 0 5px 25px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
         }
 
         .controls {
@@ -274,7 +277,7 @@ display: flex;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -302,6 +305,7 @@ display: flex;
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 1001;
         }
 
         /* Сообщение о пустой галерее */
@@ -309,25 +313,77 @@ display: flex;
             text-align: center;
             padding: 40px 20px;
             opacity: 0.7;
+            grid-column: 1 / -1;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 2000;
+            transform: translateX(200%);
+
+Денис Приходько, [27.07.2025 18:38]
+transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .image-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .nav-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Интерактивная Галерея</h1>
+            <h1>Рабочая Галерея Изображений</h1>
             <p class="subtitle">Загружайте, просматривайте и наслаждайтесь вашими изображениями</p>
         </header>
 
         <div class="main-content">
             <div class="gallery-section">
                 <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📁</div>
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                     <h3>Перетащите сюда изображения или</h3>
-
-Денис Приходько, [27.07.2025 18:30]
-<input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
-                    <button class="btn" id="uploadBtn"><span>Выбрать файлы</span></button>
+                    <input type="file" id="fileInput" class="file-input" accept="image/*" multiple>
+                    <button class="btn" id="uploadBtn"><i class="fas fa-folder-open"></i> <span>Выбрать файлы</span></button>
                 </div>
 
                 <h3>Миниатюры</h3>
@@ -346,17 +402,37 @@ display: flex;
                 </div>
                 
                 <div class="slider-container">
-                    <input type="range" min="1" max="10" value="5" class="slider" id="zoomSlider">
+                    <input type="range" min="50" max="150" value="100" class="slider" id="zoomSlider">
                     <div class="slider-labels">
-                        <span>Уменьшить</span>
+                        <span>50%</span>
                         <span>Масштаб</span>
-                        <span>Увеличить</span>
+                        <span>150%</span>
                     </div>
                 </div>
                 
-                <div class="controls">
+                <div class="image-info">
+                    <span id="imageIndex">0/0</span> | <span id="imageSize">0 KB</span>
+                </div>
+                
+                <div class="nav-controls">
+                    <button class="action-btn" id="prevBtn" title="Предыдущее изображение">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="action-btn" id="nextBtn" title="Следующее изображение">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="action-btn" id="rotateLeftBtn" title="Повернуть влево">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="action-btn" id="rotateRightBtn" title="Повернуть вправо">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+
+Денис Приходько, [27.07.2025 18:38]
+<div class="controls">
                     <button class="btn" id="fullscreenBtn">
-                        <span>Полный экран</span>
+                        <i class="fas fa-expand"></i> <span>Полный экран</span>
                     </button>
                     
                     <select class="interval-select" id="intervalSelect">
@@ -364,18 +440,23 @@ display: flex;
                         <option value="3">3 секунды</option>
                         <option value="5" selected>5 секунд</option>
                         <option value="7">7 секунд</option>
+                        <option value="10">10 секунд</option>
                     </select>
                     
                     <button class="btn" id="slideshowBtn">
-                        <span>Слайд-шоу</span>
+                        <i class="fas fa-play"></i> <span>Слайд-шоу</span>
                     </button>
                 </div>
             </div>
         </div>
         
         <footer>
-            <p>© 2023 Интерактивная Галерея | Все изображения обрабатываются локально на вашем устройстве</p>
+            <p>© 2023 Рабочая Галерея Изображений | Все изображения обрабатываются локально на вашем устройстве</p>
         </footer>
+    </div>
+    
+    <div class="notification" id="notification">
+        <div id="notificationText"></div>
     </div>
 
     <script>
@@ -390,11 +471,20 @@ display: flex;
             const slideshowBtn = document.getElementById('slideshowBtn');
             const intervalSelect = document.getElementById('intervalSelect');
             const zoomSlider = document.getElementById('zoomSlider');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+            const rotateRightBtn = document.getElementById('rotateRightBtn');
+            const imageIndex = document.getElementById('imageIndex');
+            const imageSize = document.getElementById('imageSize');
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
             
             // Переменные состояния
             let images = [];
             let currentImageIndex = -1;
             let slideshowInterval = null;
+            let rotation = 0;
             
             // Инициализация
             initGallery();
@@ -403,19 +493,43 @@ display: flex;
                 // Обработчики событий
                 uploadBtn.addEventListener('click', () => fileInput.click());
                 uploadArea.addEventListener('dragover', handleDragOver);
+                uploadArea.addEventListener('dragleave', handleDragLeave);
                 uploadArea.addEventListener('drop', handleDrop);
                 fileInput.addEventListener('change', handleFileSelect);
                 fullscreenBtn.addEventListener('click', toggleFullscreen);
                 slideshowBtn.addEventListener('click', toggleSlideshow);
                 zoomSlider.addEventListener('input', handleZoom);
+                prevBtn.addEventListener('click', showPrevImage);
+                nextBtn.addEventListener('click', showNextImage);
+                rotateLeftBtn.addEventListener('click', () => rotateImage(-90));
+                rotateRightBtn.addEventListener('click', () => rotateImage(90));
+                
+                // Инициализация слайдера масштабирования
+                handleZoom();
             }
+            
+            // Показать уведомление
+            function showNotification(message) {
+                notificationText.textContent = message;
+                notification.classList.add('show');
 
-Денис Приходько, [27.07.2025 18:30]
-// Обработка перетаскивания файлов
+Денис Приходько, [27.07.2025 18:38]
+setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Обработка перетаскивания файлов
             function handleDragOver(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 uploadArea.style.background = 'rgba(255, 255, 255, 0.15)';
+            }
+            
+            function handleDragLeave(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.style.background = '';
             }
             
             function handleDrop(e) {
@@ -424,29 +538,51 @@ display: flex;
                 uploadArea.style.background = '';
                 
                 if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                    fileInput.files = e.dataTransfer.files;
-                    handleFileSelect();
+                    const files = Array.from(e.dataTransfer.files);
+                    processFiles(files);
                 }
             }
             
             // Обработка выбора файлов
-            function handleFileSelect() {
-                const files = Array.from(fileInput.files);
+            function handleFileSelect(e) {
+                const files = Array.from(e.target.files);
+                processFiles(files);
+            }
+            
+            // Обработка файлов
+            function processFiles(files) {
                 if (files.length === 0) return;
+                
+                // Фильтруем только изображения
+                const imageFiles = files.filter(file => file.type.match('image.*'));
+                
+                if (imageFiles.length === 0) {
+                    showNotification('Пожалуйста, выберите файлы изображений');
+                    return;
+                }
+                
+                // Показываем уведомление
+                showNotification(`Загружено ${imageFiles.length} изображений`);
                 
                 // Очищаем сообщение "галерея пуста"
                 if (thumbnailContainer.querySelector('.empty-message')) {
                     thumbnailContainer.innerHTML = '';
                 }
                 
-                files.forEach(file => {
-                    if (!file.type.match('image.*')) return;
-                    
+                // Обрабатываем каждый файл
+                imageFiles.forEach(file => {
                     const reader = new FileReader();
                     
                     reader.onload = (e) => {
-                        images.push(e.target.result);
-                        createThumbnail(e.target.result);
+                        const imageData = {
+                            src: e.target.result,
+                            name: file.name,
+                            size: (file.size / 1024).toFixed(1) + ' KB',
+                            rotation: 0
+                        };
+                        
+                        images.push(imageData);
+                        createThumbnail(imageData, images.length - 1);
                         
                         // Если это первое изображение, показываем его
                         if (currentImageIndex === -1) {
@@ -460,16 +596,14 @@ display: flex;
             }
             
             // Создание миниатюры
-            function createThumbnail(src) {
-                const index = images.length - 1;
-                
+            function createThumbnail(imageData, index) {
                 const thumbnail = document.createElement('div');
                 thumbnail.className = 'thumbnail';
                 thumbnail.dataset.index = index;
                 
                 const img = document.createElement('img');
-                img.src = src;
-                img.alt = Изображение ${index + 1};
+                img.src = imageData.src;
+                img.alt = imageData.name;
                 
                 thumbnail.appendChild(img);
                 thumbnail.addEventListener('click', () => {
@@ -483,9 +617,20 @@ display: flex;
             
             // Показ выбранного изображения
             function showImage(index) {
-                currentImageIndex = index;
-                mainImage.src = images[index];
+                if (images.length === 0  index < 0  index >= images.length) return;
+
+Денис Приходько, [27.07.2025 18:38]
+currentImageIndex = index;
+                const imageData = images[index];
+                
+                // Обновляем основное изображение
+                mainImage.src = imageData.src;
                 mainImage.classList.add('fade-in');
+                mainImage.style.transform = scale(${zoomSlider.value/100}) rotate(${imageData.rotation}deg);
+                
+                // Обновляем информацию
+                imageIndex.textContent = ${index + 1}/${images.length};
+                imageSize.textContent = imageData.size;
                 
                 // Удаляем класс анимации после завершения
                 setTimeout(() => {
@@ -502,57 +647,97 @@ display: flex;
                 });
             }
             
+            // Показать предыдущее изображение
+            function showPrevImage() {
+                if (images.length === 0) return;
+                
+                let newIndex = currentImageIndex - 1;
+                if (newIndex < 0) newIndex = images.length - 1;
+                
+                showImage(newIndex);
+                stopSlideshow();
+            }
+            
+            // Показать следующее изображение
+            function showNextImage() {
+                if (images.length === 0) return;
+                
+                let newIndex = currentImageIndex + 1;
+                if (newIndex >= images.length) newIndex = 0;
+                
+                showImage(newIndex);
+                stopSlideshow();
+            }
+            
+            // Поворот изображения
+            function rotateImage(degrees) {
+                if (images.length === 0) return;
+                
+                rotation += degrees;
+                images[currentImageIndex].rotation = rotation;
+                mainImage.style.transform = scale(${zoomSlider.value/100}) rotate(${rotation}deg);
+            }
+            
             // Переключение полноэкранного режима
             function toggleFullscreen() {
-                if (!document.fullscreenElement) {
-                    // Вход в полноэкранный режим
-                    const fullscreenContainer = document.createElement('div');
-                    fullscreenContainer.className = 'fullscreen';
-                    
-                    const fullscreenImg = document.createElement('img');
-                    fullscreenImg.src = mainImage.src;
-                    fullscreenImg.
-
-Денис Приходько, [27.07.2025 18:30]
-alt = 'Изображение в полноэкранном режиме';
-                    
-                    const closeBtn = document.createElement('div');
-                    closeBtn.className = 'close-fullscreen';
-                    closeBtn.innerHTML = '✕';
-                    closeBtn.addEventListener('click', () => {
-                        document.body.removeChild(fullscreenContainer);
-                    });
-                    
-                    fullscreenContainer.appendChild(fullscreenImg);
-                    fullscreenContainer.appendChild(closeBtn);
-                    document.body.appendChild(fullscreenContainer);
-                    
-                    fullscreenContainer.addEventListener('click', (e) => {
-                        if (e.target === fullscreenContainer) {
-                            document.body.removeChild(fullscreenContainer);
-                        }
-                    });
+                if (images.length === 0) {
+                    showNotification('Загрузите изображения для просмотра');
+                    return;
                 }
+                
+                const fullscreenContainer = document.createElement('div');
+                fullscreenContainer.className = 'fullscreen';
+                
+                const fullscreenImg = document.createElement('img');
+                fullscreenImg.src = mainImage.src;
+                fullscreenImg.alt = 'Изображение в полноэкранном режиме';
+                fullscreenImg.style.transform = rotate(${rotation}deg);
+                
+                const closeBtn = document.createElement('div');
+                closeBtn.className = 'close-fullscreen';
+                closeBtn.innerHTML = '✕';
+                closeBtn.addEventListener('click', () => {
+                    document.body.removeChild(fullscreenContainer);
+                });
+                
+                fullscreenContainer.appendChild(fullscreenImg);
+                fullscreenContainer.appendChild(closeBtn);
+                document.body.appendChild(fullscreenContainer);
+                
+                fullscreenContainer.addEventListener('click', (e) => {
+                    if (e.target === fullscreenContainer) {
+                        document.body.removeChild(fullscreenContainer);
+                    }
+                });
             }
             
             // Управление слайд-шоу
             function toggleSlideshow() {
-                if (slideshowInterval) {
+                if (images.length === 0) {
+                    showNotification('Загрузите изображения для слайд-шоу');
+                    return;
+                }
+
+Денис Приходько, [27.07.2025 18:38]
+if (slideshowInterval) {
                     stopSlideshow();
-                    slideshowBtn.innerHTML = '<span>Слайд-шоу</span>';
+                    slideshowBtn.innerHTML = '<i class="fas fa-play"></i> <span>Слайд-шоу</span>';
                 } else {
                     startSlideshow();
-                    slideshowBtn.innerHTML = '<span>Остановить</span>';
+                    slideshowBtn.innerHTML = '<i class="fas fa-stop"></i> <span>Остановить</span>';
                 }
             }
             
             function startSlideshow() {
-                if (images.length === 0) return;
-                
                 const interval = parseInt(intervalSelect.value) * 1000;
                 slideshowInterval = setInterval(() => {
-                    currentImageIndex = Math.floor(Math.random() * images.length);
-                    showImage(currentImageIndex);
+                    // Выбираем случайное изображение, отличное от текущего
+                    let newIndex;
+                    do {
+                        newIndex = Math.floor(Math.random() * images.length);
+                    } while (images.length > 1 && newIndex === currentImageIndex);
+                    
+                    showImage(newIndex);
                 }, interval);
             }
             
@@ -560,13 +745,16 @@ alt = 'Изображение в полноэкранном режиме';
                 if (slideshowInterval) {
                     clearInterval(slideshowInterval);
                     slideshowInterval = null;
+                    slideshowBtn.innerHTML = '<i class="fas fa-play"></i> <span>Слайд-шоу</span>';
                 }
             }
             
             // Обработка масштабирования
             function handleZoom() {
-                const scale = 0.5 + (zoomSlider.value / 10);
-                mainImage.style.transform = scale(${scale});
+                if (images.length === 0) return;
+                
+                const scale = zoomSlider.value / 100;
+                mainImage.style.transform = scale(${scale}) rotate(${rotation}deg);
             }
         });
     </script>

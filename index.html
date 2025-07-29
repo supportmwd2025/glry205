@@ -111,6 +111,7 @@
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 16px;
+            z-index: 1001; /* Ensure counter is above image */
         }
 
         .fullscreen .image-container {
@@ -126,6 +127,12 @@
 
         .fullscreen .gallery-image {
             max-height: 100vh;
+        }
+
+        .fullscreen .image-counter {
+            bottom: 20px; /* Slightly more padding in fullscreen */
+            font-size: 16px;
+            z-index: 1001; /* Ensure visibility in fullscreen */
         }
 
         /* Mobile styles for iPhone 15 Pro (393px width) */
@@ -155,6 +162,14 @@
             .image-counter {
                 font-size: 14px;
                 padding: 3px 8px;
+                z-index: 1001;
+            }
+
+            .fullscreen .image-counter {
+                font-size: 14px;
+                padding: 3px 8px;
+                bottom: 15px;
+                z-index: 1001;
             }
         }
     </style>

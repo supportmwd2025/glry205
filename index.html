@@ -19,6 +19,7 @@
             min-height: 100vh;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
         .gallery-container {
@@ -89,6 +90,8 @@
             justify-content: space-between;
             transform: translateY(-50%);
             padding: 0 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .nav-buttons button {
@@ -111,7 +114,7 @@
             padding: 5px 10px;
             border-radius: 5px;
             font-size: 16px;
-            z-index: 1001; /* Ensure counter is above image */
+            z-index: 1001;
         }
 
         .fullscreen .image-container {
@@ -130,9 +133,45 @@
         }
 
         .fullscreen .image-counter {
-            bottom: 20px; /* Slightly more padding in fullscreen */
+            bottom: 20px;
             font-size: 16px;
-            z-index: 1001; /* Ensure visibility in fullscreen */
+            z-index: 1001;
+        }
+
+        .fullscreen .nav-buttons {
+            opacity: 0;
+        }
+
+        .fullscreen .control-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1001;
+        }
+
+        .fullscreen .control-panel button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .fullscreen:hover .nav-buttons,
+        .fullscreen:hover .control-panel,
+        .fullscreen:active .nav-buttons,
+        .fullscreen:active .control-panel {
+            opacity: 1;
         }
 
         /* Mobile styles for iPhone 15 Pro (393px width) */
@@ -171,6 +210,23 @@
                 bottom: 15px;
                 z-index: 1001;
             }
+
+            .fullscreen .control-panel {
+                padding: 5px;
+            }
+
+            .fullscreen .control-panel button {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .fullscreen .nav-buttons {
+                display: none;
+            }
+
+            .fullscreen .image-container {
+                touch-action: manipulation;
+            }
         }
     </style>
 </head>
@@ -194,6 +250,11 @@
                 <button onclick="nextImage()">►</button>
             </div>
             <div class="image-counter" id="imageCounter">0/0</div>
+            <div class="control-panel" id="controlPanel" style="display: none;">
+                <button onclick="prevImage()">Back</button>
+                <button onclick="toggleSlideshow()">Start</button>
+                <button onclick="nextImage()">Next</button>
+            </div>
         </div>
     </div>
 
@@ -209,6 +270,7 @@
         const imageContainer = document.getElementById('imageContainer');
         const galleryImage = document.getElementById('galleryImage');
         const imageCounter = document.getElementById('imageCounter');
+        const controlPanel = document.getElementById('controlPanel');
 
         folderInput.addEventListener('change', (event) => {
             images = [];
@@ -254,6 +316,7 @@
                 clearInterval(slideshowInterval);
                 isSlideshowRunning = false;
                 document.querySelector('button[onclick="toggleSlideshow()"]').textContent = 'Start Slideshow';
+                document.getElementById('controlPanel').querySelector('button:nth-child(2)').textContent = 'Start';
             } else {
                 if (images.length === 0) return;
                 isSlideshowRunning = true;
@@ -262,6 +325,7 @@
                     nextImage();
                 }, interval);
                 document.querySelector('button[onclick="toggleSlideshow()"]').textContent = 'Stop Slideshow';
+                document.getElementById('controlPanel').querySelector('button:nth-child(2)').textContent = 'Stop';
             }
         }
 
@@ -273,6 +337,7 @@
                     imageContainer.webkitRequestFullscreen();
                 }
                 document.body.classList.add('fullscreen');
+                controlPanel.style.display = 'flex';
                 isFullScreen = true;
             } else {
                 if (document.exitFullscreen) {
@@ -281,11 +346,12 @@
                     document.webkitExitFullscreen();
                 }
                 document.body.classList.remove('fullscreen');
+                controlPanel.style.display = 'none';
                 isFullScreen = false;
             }
         }
 
-        // Random image on button click
+        // Random image on button click or spacebar
         document.querySelector('button[onclick="toggleSlideshow()"]').addEventListener('click', () => {
             if (!isSlideshowRunning && images.length > 0) {
                 currentIndex = Math.floor(Math.random() * images.length);
@@ -293,10 +359,36 @@
             }
         });
 
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && images.length > 0) {
+                currentIndex = Math.floor(Math.random() * images.length);
+                showImage(currentIndex);
+            }
+        });
+
+        // Mobile tap handling for random navigation
+        imageContainer.addEventListener('touchstart', (event) => {
+            const touchX = event.touches[0].clientX;
+            const containerWidth = imageContainer.offsetWidth;
+            if (touchX < containerWidth / 3 && images.length > 0) {
+                currentIndex = Math.floor(Math.random() * images.length);
+                showImage(currentIndex);
+            } else if (touchX > 2 * containerWidth / 3 && images.length > 0) {
+                currentIndex = Math.floor(Math.random() * images.length);
+                showImage(currentIndex);
+            } else if (isFullScreen) {
+                controlPanel.style.opacity = '1';
+                setTimeout(() => {
+                    controlPanel.style.opacity = '0';
+                }, 2000);
+            }
+        }, { passive: true });
+
         // Handle fullscreen change to sync state
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
                 document.body.classList.remove('fullscreen');
+                controlPanel.style.display = 'none';
                 isFullScreen = false;
             }
         });
